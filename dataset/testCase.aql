@@ -1,0 +1,56 @@
+create view Number as
+    extract regex /[0-9]+(\.[0-9])?/
+        on Doc.text as number
+   from Document Doc;
+
+create view Percentage as
+    extract pattern (<Num.number>) (/percent/)
+        return group 1 as number
+           and group 2 as percent
+           and group 0 as Percentage
+    from Number Num;
+
+create view PercentageOnly as
+    select PTO.Percentage as PerOnly
+    from Percentage PTO;
+
+create view Change as
+    extract regex /up|down|increase|decrease/
+        on R.text as Change
+    from Document R;
+
+create view PercentageChange as
+    extract pattern <C.Change> <Token>{0, 2} <P.Percentage>
+    return group 0 as PercentageChange
+    from Change C,Percentage P;
+
+create view Unit as
+    extract regex /billion|million|trillion/
+        on Text.text as unit
+    from Document Text;
+
+create view Money as
+	extract pattern /$?/ (<N.number>) (<U.unit>)
+		return group 0 as money
+		   and group 1 as number
+		   and group 2 as unit
+	from  Number N, Unit U;
+
+create view Revenue as
+    extract regex /revenues|revenue/
+        on D.text as Revenue
+    from Document D;
+
+create view Keyword as
+    extract regex /[A-Z]+[A-Za-z&]*/
+        on D.text as keyword
+    from Document D;
+
+
+
+output view Number;
+output view Percentage;
+output view PercentageOnly;
+output view PercentageChange;
+output view Money;
+output view Revenue;
